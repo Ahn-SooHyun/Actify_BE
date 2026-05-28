@@ -1,0 +1,135 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.14'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'kr.co.actify'
+version = '0.0.1-SNAPSHOT'
+description = 'actify-user-service'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    set('springCloudVersion', "2025.0.2")
+}
+
+dependencies {
+
+    // =========================================================
+    // [JWT]
+    // - 로그인 성공 시 Access Token / Refresh Token 발급
+    // - 요청 헤더의 JWT 파싱 및 검증
+    // - 사용자 식별 정보, 권한 정보 등을 Claims에 담기 위해 사용
+    // =========================================================
+    implementation 'io.jsonwebtoken:jjwt-api:0.13.0'        // JWT 생성, 파싱, 검증 API
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'          // JJWT 실제 구현체
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'       // JWT Claims JSON 직렬화/역직렬화 처리
+
+    // =========================================================
+    // [Spring Boot Core / Web]
+    // - REST API 서버 구성
+    // - 회원가입, 로그인 API Controller 구현
+    // - 입력값 검증 및 서비스 상태 확인
+    // =========================================================
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'     // /actuator/health 등 서비스 상태 확인 및 모니터링
+    implementation 'org.springframework.boot:spring-boot-starter-validation'   // @NotBlank, @Email, @Size 등 DTO 입력값 검증
+    implementation 'org.springframework.boot:spring-boot-starter-web'          // Spring MVC 기반 REST API 개발
+
+    // =========================================================
+    // [Database]
+    // - MariaDB와 JPA를 이용한 사용자 정보 저장
+    // - User Entity, Repository 구현에 사용
+    // =========================================================
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'     // JPA, Hibernate 기반 ORM 처리
+    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'                         // MariaDB 연결용 JDBC 드라이버
+    runtimeOnly 'com.h2database:h2'                                            // 로컬 개발/테스트용 인메모리 DB
+
+    // =========================================================
+    // [Redis]
+    // - Refresh Token 저장
+    // - Access Token 블랙리스트 처리
+    // - 이메일 인증번호, 로그인 실패 횟수 등 임시 데이터 저장
+    // =========================================================
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'   // RedisTemplate, RedisRepository 등 Redis 연동 기능
+
+    // =========================================================
+    // [Mail]
+    // - 이메일 인증
+    // - 비밀번호 재설정 메일
+    // - 가입 안내 메일 등에 사용
+    // =========================================================
+    implementation 'org.springframework.boot:spring-boot-starter-mail'         // JavaMailSender 기반 이메일 발송 기능
+
+    // =========================================================
+    // [Security]
+    // - 인증/인가 처리
+    // - 비밀번호 암호화
+    // - JWT 인증 필터 구성
+    // - 회원가입/로그인 API 접근 허용 설정에 사용
+    // =========================================================
+    implementation 'org.springframework.boot:spring-boot-starter-security'     // Spring Security 기반 인증/인가 처리
+
+    // =========================================================
+    // [MSA / Eureka]
+    // - User Service를 Eureka Discovery Server에 등록
+    // - Gateway에서 lb://서비스명 형태로 User Service를 찾을 수 있게 함
+    // =========================================================
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client' // Eureka Client 등록/탐색 기능
+
+    // =========================================================
+    // [Lombok]
+    // - Getter, Builder, Constructor 등 반복 코드 자동 생성
+    // - DTO, Entity, Service 코드 간결화
+    // =========================================================
+    compileOnly 'org.projectlombok:lombok'                                     // main 코드에서 Lombok 어노테이션 사용
+    annotationProcessor 'org.projectlombok:lombok'                             // main 코드 Lombok 어노테이션 처리
+
+    // =========================================================
+    // [Configuration Processor]
+    // - @ConfigurationProperties 사용 시 설정 자동완성 및 메타데이터 생성
+    // - application.yml 설정값 바인딩할 때 유용
+    // =========================================================
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    // =========================================================
+    // [Development Tools]
+    // - 개발 중 코드 변경 시 자동 재시작
+    // - 운영 배포에는 포함되지 않음
+    // =========================================================
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'            // 로컬 개발 편의 기능
+
+    // =========================================================
+    // [Testing]
+    // - 단위 테스트, 통합 테스트
+    // - Security 인증/인가 테스트
+    // =========================================================
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'     // JUnit, Mockito, AssertJ, Spring Test 포함
+    testImplementation 'org.springframework.security:spring-security-test'     // @WithMockUser 등 Security 테스트 지원
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'               // JUnit 5 테스트 실행 런처
+
+    // =========================================================
+    // [Lombok for Test]
+    // - 테스트 코드에서도 Lombok 어노테이션 사용 가능하게 설정
+    // =========================================================
+    testCompileOnly 'org.projectlombok:lombok'                                 // test 코드에서 Lombok 사용
+    testAnnotationProcessor 'org.projectlombok:lombok'                         // test 코드 Lombok 어노테이션 처리
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
