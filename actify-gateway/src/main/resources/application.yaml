@@ -5,14 +5,6 @@ spring:
   application:
     name: actify-gateway
 
-  cloud:
-    gateway:
-      routes:
-        - id: actify-user-service
-          uri: lb://ACTIFY-USER-SERVICE
-          predicates:
-            - Path=/api/users/**,/api/auth/**
-
 eureka:
   instance:
     instance-id: ${spring.application.name}:${server.port}
