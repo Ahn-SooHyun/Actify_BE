@@ -1,0 +1,56 @@
+HELP.md
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### Environment & Secrets ###
+.env
+.env.local
+.env.*.local
+*.env
+
+### macOS ###
+.DS_Store
+
+### Logs ###
+*.log
+logs/
+
+### Spring Boot 설정 (yaml은 환경별로 다르므로 깃에서 제외) ###
+src/main/resources/application.yaml
+src/main/resources/application.yml
+src/main/resources/application-*.yaml
+src/main/resources/application-*.yml
