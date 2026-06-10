@@ -160,7 +160,6 @@ public class RegisterServiceImpl implements RegisterService {
 
         // 해당 사용자의 대기 상태인 엔티티 조회
         Users user = userQueryService.findWaitUser(usersVerifications.getUsersIdx());
-        UsersInformation userInfo = userQueryService.findWaitUserInfo(usersVerifications.getUsersIdx());
 
         // 사용자 계정 및 정보를 활성화(ACTIVE)
         user.activateUsers();

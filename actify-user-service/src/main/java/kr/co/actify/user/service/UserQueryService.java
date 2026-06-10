@@ -33,5 +33,12 @@ public interface UserQueryService {
      */
     UsersInformation findWaitUserInfo(Long userIdx);
 
+    /**
+     * 아이디(String)를 사용하여 활성 상태인 사용자를 조회합니다.
+     * 로그인 등 아이디 기반 로직에서 사용됩니다.
+     * * @param id 사용자 아이디
+     * @return 활성 상태인 Users 엔티티
+     */
+    Users findActiveUserById(String id);
 
 }

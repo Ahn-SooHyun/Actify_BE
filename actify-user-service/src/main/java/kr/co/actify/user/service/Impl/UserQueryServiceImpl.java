@@ -59,4 +59,16 @@ public class UserQueryServiceImpl implements UserQueryService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않거나 대기 상태가 아닌 사용자입니다."));
     }
 
+    /**
+     * 활성 상태(ACTIVE)의 사용자를 아이디(String)로 조회합니다.
+     * 로그인 등에 사용됩니다.
+     */
+    @Override
+    public Users findActiveUserById(String id) {
+        Users user = userRepository.findByIdAndStatus(id, UsersStatus.ACTIVE)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디입니다."));
+        user.checkAccountStatus();
+        return user;
+    }
+
 }

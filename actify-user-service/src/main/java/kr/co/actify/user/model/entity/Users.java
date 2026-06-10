@@ -8,6 +8,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.DynamicInsert;
 
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
  * 서비스의 핵심 사용자 계정 정보를 관리하는 Entity 클래스입니다.
  * 인증(로그인), 권한 관리, 계정 상태(잠금, 삭제) 등의 기능을 담당합니다.
  */
+@Slf4j
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -91,6 +93,35 @@ public class Users {
 
     public void activateUsers() {
         this.status = UsersStatus.ACTIVE;
+    }
+
+    public void checkAccountStatus() {
+        switch (this.status) {
+            case UsersStatus.SUSPENDED -> throw new IllegalStateException("관리자 또는 운영 정책에 의해 정지된 상태의 회원입니다.");
+            case UsersStatus.PENDING_EMAIL -> throw new IllegalStateException("인증을 먼저 시도해 주세요.");
+            case UsersStatus.WITHDRAWN -> throw new IllegalStateException("탈퇴한 회원입니다.");
+            default -> log.info("계정 상태가 정상입니다. (Status: {})", this.status);
+        }
+    }
+
+    /** 현재 계정이 잠금 상태인지 확인합니다. */
+    public boolean isLocked() {
+        return this.lockedUntil != null && this.lockedUntil.isAfter(LocalDateTime.now());
+    }
+
+    /** 로그인 실패 시 횟수를 증가시키고 필요 시 잠금을 설정합니다. */
+    public void handleLoginFailure(int maxAttempts, int lockMinutes) {
+        this.failedLoginAttempts += 1;
+        if (this.failedLoginAttempts >= maxAttempts) {
+            this.lockedUntil = LocalDateTime.now().plusMinutes(lockMinutes);
+        }
+    }
+
+    /** 로그인 성공 시 실패 횟수 및 잠금 상태를 초기화합니다. */
+    public void completeLogin() {
+        this.failedLoginAttempts = 0;
+        this.lockedUntil = null;
+        this.lockedReason = null;
     }
 
 }

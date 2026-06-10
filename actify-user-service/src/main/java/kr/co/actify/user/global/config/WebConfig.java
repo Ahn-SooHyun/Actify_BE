@@ -1,4 +1,4 @@
-package kr.co.actify.user.config;
+package kr.co.actify.user.global.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

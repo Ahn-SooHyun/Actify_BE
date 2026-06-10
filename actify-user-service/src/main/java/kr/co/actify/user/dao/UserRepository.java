@@ -14,22 +14,9 @@ import java.util.Optional;
  */
 public interface UserRepository extends JpaRepository<Users, Long> {
 
-    /**
-     * 특정 아이디가 존재하는지 확인합니다.
-     * 회원가입 시 아이디 중복 체크에 사용됩니다.
-     *
-     * @param id 확인할 사용자 아이디
-     * @param del 삭제 상태
-     * @return 존재하면 true, 아니면 false
-     */
     boolean existsByIdAndDelAndStatusIn(String id, PublicDel del, List<UsersStatus> statuses);
 
-    /**
-     * 사용자 식별자(PK)로 계정 정보를 조회합니다.
-     *
-     * @param usersIdx 사용자 식별자
-     * @param del 삭제 상태
-     * @return 조건에 맞는 Users 엔티티 (Optional)
-     */
     Optional<Users> findByUsersIdxAndStatusAndDel(Long usersIdx, UsersStatus status ,PublicDel del);
+
+    Optional<Users> findByIdAndStatus(String id, UsersStatus status);
 }
