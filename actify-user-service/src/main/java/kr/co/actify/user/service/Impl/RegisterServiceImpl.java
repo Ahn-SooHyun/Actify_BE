@@ -21,6 +21,7 @@ import kr.co.actify.user.util.EmailTemplateProvider;
 import kr.co.actify.user.util.MailUtil;
 import kr.co.actify.user.util.RandomCodeUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -51,6 +52,10 @@ public class RegisterServiceImpl implements RegisterService {
     private final EmailTemplateProvider emailTemplateProvider;
 
     private final HmacSha256HashUtil hmacSha256HashUtil;
+
+    // application.yml에서 설정된 인증번호 유효 시간 (분 단위)
+    @Value("${custom.security.verification.register-expiration-minutes}")
+    private long expirationMinutes;
 
     /**
      * 아이디 중복 여부를 확인합니다.
@@ -106,7 +111,7 @@ public class RegisterServiceImpl implements RegisterService {
                 .usersIdx(savedUser.getUsersIdx())
                 .purpose(UsersVerificationsPurPose.SIGNUP)
                 .code(randomCodeUtil.getCode())
-                .expiresAt(LocalDateTime.now().plusMinutes(10))
+                .expiresAt(LocalDateTime.now().plusMinutes(expirationMinutes))
                 .status(UsersVerificationsStatus.PENDING)
                 .build();
         userVerificationsRepository.save(usersVerifications);

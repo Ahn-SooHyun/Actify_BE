@@ -2,6 +2,8 @@ package kr.co.actify.user.dao;
 
 import kr.co.actify.user.model.entity.UsersVerifications;
 import kr.co.actify.user.model.vo.PublicDel;
+import kr.co.actify.user.model.vo.UsersVerificationsPurPose;
+import kr.co.actify.user.model.vo.UsersVerificationsStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
@@ -21,13 +23,5 @@ public interface UserVerificationsRepository extends JpaRepository<UsersVerifica
      */
     Optional<UsersVerifications> findTopByCodeAndDelOrderByCreatedAtDesc(String code, PublicDel del);
 
-    /**
-     * 사용자 식별자와 삭제 상태로 인증 정보를 조회합니다.
-     * 해당 사용자의 가장 최신 인증 요청 내역을 가져옵니다.
-     *
-     * @param usersIdx 사용자 식별자
-     * @param del 삭제 상태
-     * @return 조건에 맞는 최신 UsersVerifications 엔티티 (Optional)
-     */
-    Optional<UsersVerifications> findTopByUsersIdxAndDelOrderByCreatedAtDesc(Long usersIdx, PublicDel del);
+    Optional<UsersVerifications> findTopByUsersIdxAndPurposeAndStatusAndDelOrderByCreatedAtDesc(Long usersIdx, UsersVerificationsPurPose purpose, UsersVerificationsStatus status, PublicDel del);
 }

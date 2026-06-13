@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.DynamicInsert;
 
 import java.time.LocalDateTime;
+import java.util.function.BiFunction;
 
 /**
  * 서비스의 핵심 사용자 계정 정보를 관리하는 Entity 클래스입니다.
@@ -122,6 +123,12 @@ public class Users {
         this.failedLoginAttempts = 0;
         this.lockedUntil = null;
         this.lockedReason = null;
+    }
+
+    /** 비밀번호를 변경합니다. 현재 비밀번호와 동일한지 체크하는 로직을 포함합니다. */
+    public void changePassword(String newEncodedPw) {
+        this.pw = newEncodedPw;
+        this.completeLogin(); // 변경 성공 시 잠금 상태도 함께 초기화
     }
 
 }

@@ -21,4 +21,6 @@ public interface UserInformationRepository extends JpaRepository<UsersInformatio
      */
     Optional<UsersInformation> findByUsersIdxAndDel(Long usersIdx, PublicDel del);
 
+    Optional<UsersInformation> findByMailHashAndDel(String mail, PublicDel del);
+
 }

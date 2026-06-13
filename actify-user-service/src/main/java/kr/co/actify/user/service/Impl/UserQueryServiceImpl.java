@@ -8,6 +8,7 @@ import kr.co.actify.user.model.vo.PublicDel;
 import kr.co.actify.user.model.vo.UsersStatus;
 import kr.co.actify.user.service.UserQueryService;
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,13 +51,10 @@ public class UserQueryServiceImpl implements UserQueryService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않거나 대기 상태가 아닌 사용자입니다."));
     }
 
-    /**
-     * 대기 상태인 사용자의 상세 정보(UsersInformation)를 조회합니다.
-     */
     @Override
     public UsersInformation findWaitUserInfo(Long userIdx) {
         return userInformationRepository.findByUsersIdxAndDel(userIdx, PublicDel.ACTIVE)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않거나 대기 상태가 아닌 사용자입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않거는 사용자입니다."));
     }
 
     /**
@@ -67,6 +65,19 @@ public class UserQueryServiceImpl implements UserQueryService {
     public Users findActiveUserById(String id) {
         Users user = userRepository.findByIdAndStatus(id, UsersStatus.ACTIVE)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디입니다."));
+        user.checkAccountStatus();
+        return user;
+    }
+
+    /**
+     * 활성 상태(ACTIVE)의 사용자를 식별자로 조회합니다.
+     * 일반적인 비즈니스 로직에서 유효한 회원을 찾을 때 사용합니다.
+     */
+    @Override
+    public Users findActiveUser(Long userIdx) {
+        Users user = userRepository.findByUsersIdxAndStatusAndDel(userIdx, UsersStatus.ACTIVE,PublicDel.ACTIVE)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        // 계정의 잠금 상태 등 추가적인 상태 체크 수행
         user.checkAccountStatus();
         return user;
     }

@@ -41,4 +41,6 @@ public interface UserQueryService {
      */
     Users findActiveUserById(String id);
 
+    Users findActiveUser(Long userIdx);
+
 }

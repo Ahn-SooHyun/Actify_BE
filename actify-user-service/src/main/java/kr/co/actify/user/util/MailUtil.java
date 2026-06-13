@@ -1,58 +1,129 @@
 package kr.co.actify.user.util;
 
-import kr.co.actify.user.model.dto.mail.EmailMessage;
 import jakarta.mail.MessagingException;
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+import kr.co.actify.user.global.config.properties.MailProperties;
+import kr.co.actify.user.model.dto.mail.EmailMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
-/**
- * 이메일 발송 기능을 담당하는 유틸리티 클래스입니다.
- * Spring의 JavaMailSender를 사용하여 실제 메일을 전송합니다.
- * 비동기(Async) 처리를 통해 이메일 발송 중 메인 스레드가 차단(Block)되지 않도록 합니다.
- */
-@Slf4j // 로깅 기능을 위한 Lombok 어노테이션 (log 객체 자동 생성)
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.concurrent.CompletableFuture;
+
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class MailUtil {
-    // Spring Boot의 MailSender 인터페이스 구현체 주입
+
+    private static final String ENCODING = StandardCharsets.UTF_8.name();
+
     private final JavaMailSender javaMailSender;
+    private final MailProperties mailProperties;
 
     /**
      * 이메일을 비동기로 전송합니다.
-     * @param emailMessage 수신자, 제목, 본문 내용이 담긴 DTO 객체
-     * @param isHtml 본문이 HTML 형식인지 여부 (true: HTML, false: 일반 텍스트)
+     *
+     * 호출부에서 반환값을 사용하지 않아도 기존처럼 동작합니다.
+     * 다만 필요하면 CompletableFuture를 통해 전송 실패 여부를 확인할 수 있습니다.
      */
-    @Async // 이 메서드는 별도의 스레드에서 비동기로 실행됩니다. (응답 대기 시간 최소화)
-    public void sendEmail(EmailMessage emailMessage, boolean isHtml) {
-        // MIME 형식의 메일 메시지 객체 생성
-        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+    @Async("mailExecutor")
+    public CompletableFuture<Void> sendEmail(EmailMessage emailMessage, boolean isHtml) {
+        String to = getSafeTo(emailMessage);
+        String subject = getSafeSubject(emailMessage);
 
         try {
-            // MimeMessageHelper를 사용하여 멀티파트(Multipart) 메시지를 쉽게 구성
-            // 두 번째 인자 false: 멀티파트 모드 아님 (첨부파일 없음), 세 번째 인자: 인코딩 설정
-            MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, false, "UTF-8");
+            validateEmailMessage(emailMessage);
 
-            // 수신자 설정
-            mimeMessageHelper.setTo(emailMessage.getTo());
-            // 메일 제목 설정
-            mimeMessageHelper.setSubject(emailMessage.getSubject());
-            // 메일 본문 설정 (두 번째 인자가 true이면 HTML 태그가 렌더링됨)
-            mimeMessageHelper.setText(emailMessage.getMessage(), isHtml);
+            MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, false, ENCODING);
 
-            // 메일 전송 수행
+            helper.setFrom(new InternetAddress(
+                    mailProperties.getFromAddress(),
+                    mailProperties.getFromName(),
+                    ENCODING
+            ));
+
+            helper.setTo(emailMessage.getTo());
+            helper.setSubject(emailMessage.getSubject());
+            helper.setText(emailMessage.getMessage(), isHtml);
+            helper.setSentDate(new Date());
+
             javaMailSender.send(mimeMessage);
 
-            // 전송 성공 로그 기록
-            log.info("Email sent successfully to: {}", emailMessage.getTo());
+            log.info(
+                    "Email sent successfully. to={}, subject={}",
+                    maskEmail(emailMessage.getTo()),
+                    emailMessage.getSubject()
+            );
 
-        } catch (MessagingException e) {
-            // 전송 실패 시 에러 로그 기록 (예외를 다시 던지지 않고 로그만 남김)
-            log.error("Failed to send email to: {}", emailMessage.getTo(), e);
+            return CompletableFuture.completedFuture(null);
+
+        } catch (MessagingException | UnsupportedEncodingException e) {
+            log.error(
+                    "Failed to build email message. to={}, subject={}",
+                    maskEmail(to),
+                    subject,
+                    e
+            );
+            return CompletableFuture.failedFuture(e);
+
+        } catch (MailException | IllegalArgumentException e) {
+            log.error(
+                    "Failed to send email. to={}, subject={}",
+                    maskEmail(to),
+                    subject,
+                    e
+            );
+            return CompletableFuture.failedFuture(e);
         }
+    }
+
+    private void validateEmailMessage(EmailMessage emailMessage) {
+        if (emailMessage == null) {
+            throw new IllegalArgumentException("이메일 메시지는 null일 수 없습니다.");
+        }
+
+        if (!StringUtils.hasText(emailMessage.getTo())) {
+            throw new IllegalArgumentException("이메일 수신자 주소는 필수입니다.");
+        }
+
+        if (!StringUtils.hasText(emailMessage.getSubject())) {
+            throw new IllegalArgumentException("이메일 제목은 필수입니다.");
+        }
+
+        if (!StringUtils.hasText(emailMessage.getMessage())) {
+            throw new IllegalArgumentException("이메일 본문은 필수입니다.");
+        }
+    }
+
+    private String getSafeTo(EmailMessage emailMessage) {
+        return emailMessage == null ? "" : emailMessage.getTo();
+    }
+
+    private String getSafeSubject(EmailMessage emailMessage) {
+        return emailMessage == null ? "" : emailMessage.getSubject();
+    }
+
+    private String maskEmail(String email) {
+        if (!StringUtils.hasText(email)) {
+            return "";
+        }
+
+        int atIndex = email.indexOf("@");
+
+        if (atIndex <= 0) {
+            return "****";
+        }
+
+        return email.charAt(0) + "****" + email.substring(atIndex);
     }
 }
