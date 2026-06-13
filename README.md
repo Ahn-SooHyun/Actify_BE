@@ -1,7 +1,7 @@
 # 🤖 라이프스타일 혁신을 위한 AI Agent 기반 SW
 
 <div align="center">
-  <img width="400" alt="프로젝트 메인 로고 또는 스크린샷" src="./docs/images/actify-logo.png" />
+  <img width="400" alt="프로젝트 메인 로고 또는 스크린샷" src="https://via.placeholder.com/600x200?text=Actify+AI+Agent" />
 </div>
 <br/>
 
@@ -84,7 +84,7 @@
 
 ### System Architecture
 
-<img width="100%" alt="System 아키텍쳐" src="./docs/images/actify-architecture.png" />
+<img width="100%" alt="System 아키텍쳐" src="https://via.placeholder.com/800x400?text=System+Architecture+Diagram" />
 
 ### ERD (Entity Relationship Diagram)
 
